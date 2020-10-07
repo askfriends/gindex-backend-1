@@ -19,11 +19,18 @@ router.post('/verify', function(req, res){
 				if(result){
 					jwt.verify(req.body.token, process.env.TOKENSECRET, function(error, decoded){
 						if(decoded){
-							var expiryUnixTime = decoded.exp * 1000;
-							var issuedUnixTime = decoded.iat * 1000;
-							const issueDate = new Date(issuedUnixTime).toLocaleString();
-							const expiryDate = new Date(expiryUnixTime).toLocaleString();
-							res.status(200).send({ auth: true, registered: true, tokenuser: decoded, issuedate: issueDate, expirydate: expiryDate });
+							let activeSessions = result.sessions;
+							if(activeSessions.map(session => {
+								return session.sessionid
+							}).indexOf(req.body.sessionId) > -1){
+								var expiryUnixTime = decoded.exp * 1000;
+								var issuedUnixTime = decoded.iat * 1000;
+								const issueDate = new Date(issuedUnixTime).toLocaleString();
+								const expiryDate = new Date(expiryUnixTime).toLocaleString();
+								res.status(200).send({ auth: true, registered: true, tokenuser: decoded, issuedate: issueDate, expirydate: expiryDate });
+							} else {
+								res.status(200).send({auth: false, registered: false, tokenuser: null});
+							}
 						} else {
 							res.status(200).send({auth: false, registered: false, tokenuser: null});
 						}

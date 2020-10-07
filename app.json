@@ -59,6 +59,10 @@
     "TOKENSECRET": {
 			"description": "Can be Anything. This will be Used to Issue JSON Web Tokens and Verify it. Recommended to Have Minimum 20 Characters. That will be Safe.",
 			"required": true
+		},
+		"MAXSESSIONS": {
+			"description": "Number of Sessions a User can Login",
+			"required": true
 		}
 	},
 	"buildpacks": [

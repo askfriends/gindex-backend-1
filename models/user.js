@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Sessions = require('./sessionSchema');
 
 // User Database Model
 const userSchema = {
@@ -37,6 +38,7 @@ const userSchema = {
     required: true,
     default: 'user'
   },
+  sessions: [Sessions],
 	admin: {
     type: Boolean,
     required: true,

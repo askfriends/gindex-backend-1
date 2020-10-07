@@ -27,21 +27,80 @@ router.post('/', function(req, res){
 										if(req.body.password != null && result.password){
 											bcrypt.compare(req.body.password, result.password, function(err, synced){
 												if(synced){
-													const existUser = result;
-				                  let token = jwt.sign({ result }, process.env.TOKENSECRET, {expiresIn: 604800});
-				                  var issueUnix = Math.floor(Date.now() / 1000)
-				                  var expiryUnix = issueUnix + 604800;
-				                  var expiryUnixTime = expiryUnix * 1000;
-				                  var issuedUnixTime = issueUnix * 1000;
-				                  const userData = {
-				                    email: existUser.email,
-				                    name: existUser.name,
-				                    admin: existUser.admin,
-				                    role: existUser.role,
-				                    superadmin: existUser.superadmin,
-				                    verified: existUser.verified,
-				                  }
-				                  res.status(200).send({ auth: true, registered: true, token: token, tokenuser:userData, issuedat: issuedUnixTime, expiryat: expiryUnixTime });
+													if(result.sessions.length > process.env.MAXSESSIONS-1){
+														User.updateOne({ email: req.body.email }, { $pull :{ sessions : { _id: result.sessions[0]._id}}}, function(error){
+															if(!error){
+																const existUser = result;
+																existUser.sessions = [{
+																	ip: req.connection.remoteAddress,
+																	time: Date.now()
+																}];
+							                  let token = jwt.sign({ existUser }, process.env.TOKENSECRET, {expiresIn: 604800});
+																let sessionToken = jwt.sign({ name: result.name, email: result.email, ip: req.connection.remoteAddress, time: Date.now() }, process.env.TOKENSECRET, {expiresIn: 604800});
+																let sessionData = result.sessions.create({
+																	sessionid: sessionToken,
+																	ip: req.connection.remoteAddress,
+																	token: token,
+																	time: Date.now()
+																});
+																User.updateOne({ email: req.body.email }, {$push: { sessions: sessionData}}, function(error){
+																	if(!error){
+																		var issueUnix = Math.floor(Date.now() / 1000)
+																		var expiryUnix = issueUnix + 604800;
+																		var expiryUnixTime = expiryUnix * 1000;
+																		var issuedUnixTime = issueUnix * 1000;
+																		const userData = {
+																			email: existUser.email,
+																			name: existUser.name,
+																			admin: existUser.admin,
+																			role: existUser.role,
+																			superadmin: existUser.superadmin,
+																			verified: existUser.verified,
+																		}
+																		res.status(200).send({ auth: true, registered: true, token: token, tokenuser:userData, sessiondata: sessionData, issuedat: issuedUnixTime, expiryat: expiryUnixTime });
+																	} else {
+																		res.status(200).send({ auth: false, registered: true, token: null, message: "Session Data Wrongly Saved. Please Try Later" });
+																	}
+																})
+															} else {
+																console.log(error);
+																res.status(200).send({ auth: false, registered: true, token: null, message: "Session Data Wrongly Saved. Please Try Later" });
+															}
+														})
+													} else {
+														const existUser = result;
+														existUser.sessions = [{
+															ip: req.connection.remoteAddress,
+															time: Date.now()
+														}];
+					                  let token = jwt.sign({ existUser }, process.env.TOKENSECRET, {expiresIn: 604800});
+														let sessionToken = jwt.sign({ name: result.name, email: result.email, ip: req.connection.remoteAddress, time: Date.now() }, process.env.TOKENSECRET, {expiresIn: 604800});
+														let sessionData = result.sessions.create({
+															sessionid: sessionToken,
+															ip: req.connection.remoteAddress,
+															token: token,
+															time: Date.now()
+														});
+														User.updateOne({ email: req.body.email }, {$push: { sessions: sessionData}}, function(error){
+															if(!error){
+																var issueUnix = Math.floor(Date.now() / 1000)
+																var expiryUnix = issueUnix + 604800;
+																var expiryUnixTime = expiryUnix * 1000;
+																var issuedUnixTime = issueUnix * 1000;
+																const userData = {
+																	email: existUser.email,
+																	name: existUser.name,
+																	admin: existUser.admin,
+																	role: existUser.role,
+																	superadmin: existUser.superadmin,
+																	verified: existUser.verified,
+																}
+																res.status(200).send({ auth: true, registered: true, token: token, tokenuser:userData, sessiondata: sessionData, issuedat: issuedUnixTime, expiryat: expiryUnixTime });
+															} else {
+																res.status(200).send({ auth: false, registered: true, token: null, message: "Session Data Wrongly Saved. Please Try Later" });
+															}
+														})
+													}
 												} else {
 													res.status(200).send({ auth: false, registered: true, token: null, message: "User Password is Wrong" });
 												}
