@@ -119,7 +119,7 @@ router.post('/user', function(req, res){
 router.post('/rootuser', function(req, res){
 	User.findOne({ $or: [ { email: req.body.email }, { superadmin: true } ] }, function(error, result){
 		if(result){
-			res.render("dashboard.ejs", {user:false, data: "SuperAdmin Already Exists. You Cannot Proceed Here afterwards. Continue Through Your Frontend"})
+			res.render("dashboard.ejs", {user:false, showPass: false, data: "SuperAdmin Already Exists. You Cannot Proceed Here afterwards. Continue Through Your Frontend"})
 		} else {
 			if(process.env.SITESECRET == req.body.secret){
 				if(req.body.password != null){
@@ -138,20 +138,20 @@ router.post('/rootuser', function(req, res){
 							})
 							newRootUser.save(function(error, doc){
 								if(!error){
-									res.render("dashboard.ejs", {user:true, details: newRootUser, fronturl: process.env.FRONTENDURL})
+									res.render("dashboard.ejs", {user:true, showPass: false, details: newRootUser, fronturl: process.env.FRONTENDURL})
 								} else {
-									res.render("dashboard.ejs", {user:false, data: "There's an Error While Saving your Details. Please Try Again."})
+									res.render("dashboard.ejs", {user:false, showPass: false, data: "There's an Error While Saving your Details. Please Try Again."})
 								}
 							})
 						} else {
-							res.render("dashboard.ejs", {user:false, data: "There's an Error while Hashing Your Password, Please Try Again Now."})
+							res.render("dashboard.ejs", {user:false, showPass: false, data: "There's an Error while Hashing Your Password, Please Try Again Now."})
 						}
 					})
 				} else {
-					res.render("dashboard.ejs", {user:false, data: "Password is Null. Please try Again Entering Your Password"})
+					res.render("dashboard.ejs", {user:false, showPass: false, data: "Password is Null. Please try Again Entering Your Password"})
 				}
 			} else {
-				res.render("dashboard.ejs", {user:false, data: "Your Secret Doesn't Match."})
+				res.render("dashboard.ejs", {user:false, showPass: false, data: "Your Secret Doesn't Match."})
 			}
 		}
 	})
